@@ -1,0 +1,21 @@
+zigbee2mqtt:
+  serial:
+    adapter: "zstack"
+    port: "/dev/ttyUSB0"
+  mqtt:
+    # -- Required: MQTT server URL (use mqtts:// for SSL/TLS connection)
+    server: "mqtt://mosquitto:1883"
+statefulset:
+  storage:
+    enabled: true
+    storageClassName: local-path
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hosts:
+    - host: zigbee2mqtt.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+        - path: /api
+          pathType: ImplementationSpecific

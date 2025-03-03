@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: thermostat-ingress
+spec:
+  rules:
+    - host: thermostat.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: thermostat-service
+                port:
+                  number: 80
