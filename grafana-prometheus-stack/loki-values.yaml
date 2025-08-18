@@ -1,6 +1,5 @@
 loki:
   auth_enabled: false
-  tenants: ["home"]
   commonConfig:
     replication_factor: 1
   schemaConfig:
@@ -19,11 +18,6 @@ loki:
     volume_enabled: true
   ruler:
     enable_api: true
-
-gateway:
-  service:
-    type: NodePort
-    nodePort: 30001
 
 minio:
   enabled: true

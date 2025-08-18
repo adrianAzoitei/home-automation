@@ -5,28 +5,8 @@ metadata:
   namespace: home-assistant
 data:
   known_devices.yaml: |
-  automations.yaml: |
-    - id: '1587296168639'
-      alias: Set thermostat set_point to radiator valve value
-      description: ''
-      triggers:
-      - trigger: template
-        value_template: "{{ state_attr('climate.room_3_radiator_valve','current_temperature') < state_attr('climate.room_3_radiator_valve','temperature')  }}"
-        for:
-          hours: 0
-          minutes: 0
-          seconds: 5
-      conditions: []
-      actions:
-      - action: rest_command.thermostat_set_point
-        metadata: {}
-        data:
-          set_point: "{{ state_attr('climate.room_3_radiator_valve','temperature') }}"
-      - action: rest_command.debug_set_point
-        metadata: {}
-        data:
-          set_point: "{{ state_attr('climate.room_3_radiator_valve','temperature') }}"
   mode: single
+  automations.yaml: |
   configuration.yaml: |-
     default_config:
     frontend:
@@ -41,11 +21,11 @@ data:
         url: "http://192.168.178.53/room_setpoint"
         method: "post"
         headers:
-          Content-Type: "text/html"
+          Content-Type: "application/x-www-form-urlencoded"
         payload: "value={{ set_point }}"
       debug_set_point:
         url: "http://192.168.178.209:8081/room_setpoint"
         method: "post"
         headers:
-          Content-Type: "text/html"
+          Content-Type: "application/x-www-form-urlencoded"
         payload: "value={{ set_point }}"

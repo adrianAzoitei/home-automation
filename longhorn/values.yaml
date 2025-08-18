@@ -1,0 +1,9 @@
+persistence:
+  defaultClass: false
+  defaultClassReplicaCount: 1
+  defaultNodeSelector:
+    enable: true
+    selector: 'nucbox'
+metrics:
+  serviceMonitor:
+    enabled: true

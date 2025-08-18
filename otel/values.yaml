@@ -1,0 +1,21 @@
+image:
+  repository: otel/opentelemetry-collector-k8s
+  tag: 0.132.4
+
+mode: daemonset
+
+presets:
+  logsCollection:
+    enabled: true
+    includeCollectorLogs: true
+
+config:
+  exporters:
+    otlphttp:
+      endpoint: http://loki.prom-stack.svc.cluster.local:3100/otlp
+
+  service:
+    pipelines:
+      logs:
+        exporters:
+          - otlphttp
