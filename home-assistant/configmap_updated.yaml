@@ -4,9 +4,18 @@ metadata:
   name: home-assistant-configmap
   namespace: home-assistant
 data:
-  known_devices.yaml: |
-  mode: single
-  automations.yaml: |
+  automations.yaml: |-
+    alias: Set Thermostat via Slider
+    description: Calls REST command whenever the input_number changes
+    trigger:
+      - platform: state
+        entity_id: input_number.central_heating_setpoint
+    condition: []
+    action:
+      - service: rest_command.thermostat_set_point
+        data:
+          set_point: "{{ states('input_number.central_heating_setpoint') }}"
+    mode: single
   configuration.yaml: |-
     default_config:
     frontend:
@@ -23,9 +32,5 @@ data:
         headers:
           Content-Type: "application/x-www-form-urlencoded"
         payload: "value={{ set_point }}"
-      debug_set_point:
-        url: "http://192.168.178.209:8081/room_setpoint"
-        method: "post"
-        headers:
-          Content-Type: "application/x-www-form-urlencoded"
-        payload: "value={{ set_point }}"
+  known_devices.yaml: ""
+  mode: single

@@ -5,6 +5,15 @@ zigbee2mqtt:
   mqtt:
     # -- Required: MQTT server URL (use mqtts:// for SSL/TLS connection)
     server: "mqtt://mosquitto:1883"
+    version: 5
+  homeassistant:
+    enabled: true
+    discovery_topic: "homeassistant"
+    status_topic: "hass/status"
+    legacy_entity_attributes: true
+    legacy_triggers: false
+  availability:
+    enabled: true
 statefulset:
   storage:
     enabled: true
