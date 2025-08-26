@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-heartbeat
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: node-heartbeat
+  template:
+    metadata:
+      labels:
+        app: node-heartbeat
+    spec:
+      containers:
+        - name: heartbeat
+          image: curlimages/curl:8.6.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                echo "Pinging watchdog from $NODE_NAME..."
+                curl -fsS --retry 3 "https://cronitor.link/p/d5c183e482ce4465bb5bec48b20dc4d0/${NODE_NAME}"
+                sleep 3600  # ping every hour
+              done
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+      tolerations:
+        - operator: Exists # so it runs on all nodes
