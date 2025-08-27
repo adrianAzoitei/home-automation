@@ -55,6 +55,12 @@ spec:
             - mountPath: /config/automations.yaml
               subPath: automations.yaml
               name: configmap-file
+            - mountPath: /config/sensors.yaml
+              subPath: sensors.yaml
+              name: configmap-file
+            - mountPath: /config/scripts.yaml
+              subPath: scripts.yaml
+              name: configmap-file
             - mountPath: /media
               name: media-volume
             #   readOnly: true

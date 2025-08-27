@@ -5,22 +5,114 @@ metadata:
   namespace: home-assistant
 data:
   automations.yaml: |-
-    alias: Set Thermostat via Slider
-    description: Calls REST command whenever the input_number changes
-    trigger:
-      - platform: state
-        entity_id: input_number.central_heating_setpoint
-    condition: []
-    action:
-      - service: rest_command.thermostat_set_point
-        data:
-          set_point: "{{ states('input_number.central_heating_setpoint') }}"
-    mode: single
+    - alias: Set Thermostat via Slider
+      description: Calls REST command whenever the input_number changes
+      trigger:
+        - platform: state
+          entity_id: input_number.central_heating_setpoint
+      condition: []
+      action:
+        - service: rest_command.thermostat_set_point
+          data:
+            set_point: "{{ states('input_number.central_heating_setpoint') }}"
+      mode: single
+    - alias: Set Temperature via Slider (for debugging)
+      description: Calls REST command whenever the input_number changes
+      trigger:
+        - platform: state
+          entity_id: input_number.temperature
+      condition: []
+      action:
+        - service: rest_command.thermostat_room_temperature
+          data:
+            temperature: "{{ states('input_number.temperature') }}"
+      mode: single
+    - alias: "Set CH setpoint based on leader room"
+      mode: single
+      trigger:
+        - platform: state
+          entity_id:
+            - climate.room_3_radiator_valve
+            # add more climate entities here
+      conditions: []
+      action:
+      - service: script.set_leader_temperature
+      - service: script.set_leader_target_temperature
+  scripts.yaml: |-
+    set_leader_temperature:
+      alias: "Set input_number.temperature based on elected leader room"
+      sequence:
+        - variables:
+            hottest_room_temperature: >
+              {% set heating_valves = states | selectattr('entity_id', 'match', '.*_radiator_valve$') | selectattr('attributes.hvac_action', 'eq', 'heating') | list %}
+              {% if heating_valves | length > 0 %}
+                {% set hottest = heating_valves | max(attribute='attributes.temperature') %}
+                {{ hottest.attributes.current_temperature }}
+              {% else %}
+                18
+              {% endif %}
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.temperature
+          data:
+            value: "{{ hottest_room_temperature }}"
+    set_leader_target_temperature:
+      alias: "Set input_number.central_heating_setpoint based on elected leader room"
+      sequence:
+        - variables:
+            hottest_room_target_temperature: >
+              {% set heating_valves = states | selectattr('entity_id', 'match', '.*_radiator_valve$') | selectattr('attributes.hvac_action', 'eq', 'heating') | list %}
+              {% if heating_valves | length > 0 %}
+                {% set hottest = heating_valves | max(attribute='attributes.temperature') %}
+                {{ hottest.attributes.temperature }}
+              {% else %}
+                18
+              {% endif %}
+        - service: input_number.set_value
+          target:
+            entity_id: input_number.central_heating_setpoint
+          data:
+            value: "{{ hottest_room_target_temperature }}"
+  sensors.yaml: |-
+    - platform: rest
+      name: "Central Heating Leader Room Temperature"
+      resource: http://192.168.178.53/metrics
+      value_template: >
+        {% set line = value.split('\n') | select('search', '^room_temperature') | list | first %}
+        {% if line %}
+          {{ line.split(' ')[1] }}
+        {% else %}
+          unknown
+        {% endif %}
+      unit_of_measurement: "°C"
+    - platform: rest
+      name: "Central Heating Leader Room Setpoint"
+      resource: http://192.168.178.53/metrics
+      value_template: >
+        {% set line = value.split('\n') | select('search', '^room_setpoint') | list | first %}
+        {% if line %}
+          {{ line.split(' ')[1] }}
+        {% else %}
+          unknown
+        {% endif %}
+      unit_of_measurement: "°C"
+    - platform: rest
+      name: "Central Heating Enabled"
+      resource: http://192.168.178.53/metrics
+      value_template: >
+        {% set line = value.split('\n') | select('search', '^ch_enabled') | list | first %}
+        {% if line %}
+          {{ line.split(' ')[1] }}
+        {% else %}
+          unknown
+        {% endif %}
   configuration.yaml: |-
     default_config:
     frontend:
       themes: !include_dir_merge_named themes
     automation: !include automations.yaml
+    sensor: !include sensors.yaml
+    script: !include scripts.yaml
     http:
       use_x_forwarded_for: true
       trusted_proxies:
@@ -32,5 +124,11 @@ data:
         headers:
           Content-Type: "application/x-www-form-urlencoded"
         payload: "value={{ set_point }}"
+      thermostat_room_temperature:
+        url: "http://192.168.178.53/room_temperature"
+        method: "post"
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+        payload: "value={{ temperature }}"
   known_devices.yaml: ""
   mode: single
