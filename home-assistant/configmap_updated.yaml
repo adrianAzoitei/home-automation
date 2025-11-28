@@ -3,9 +3,12 @@ apiVersion: v1
 metadata:
   name: home-assistant-configmap
   namespace: home-assistant
+  labels:
+    home-assistant/config: "true"
 data:
   automations.yaml: |-
     - alias: Set Thermostat via Slider
+      id: "167888000001"
       description: Calls REST command whenever the input_number changes
       trigger:
         - platform: state
@@ -17,6 +20,7 @@ data:
             set_point: "{{ states('input_number.central_heating_setpoint') }}"
       mode: single
     - alias: Set Temperature via Slider (for debugging)
+      id: "167888000002"
       description: Calls REST command whenever the input_number changes
       trigger:
         - platform: state
@@ -28,6 +32,7 @@ data:
             temperature: "{{ states('input_number.temperature') }}"
       mode: single
     - alias: "Set CH setpoint based on leader room"
+      id: "167888000003"
       mode: single
       trigger:
         - platform: state
@@ -39,9 +44,10 @@ data:
       - service: script.set_leader_temperature
       - service: script.set_leader_target_temperature
     - alias: Sync SNZB02D temp to TRVZB external input
+      id: "167888000004"
       description: Sync SNZB02D temp to TRVZB external input
       triggers:
-        - entity_id: sensor.sonoff_sensor_1_temperature
+        - entity_id: sensor.temperature_sensor_room_1_temperature
           trigger: state
       conditions: []
       actions:

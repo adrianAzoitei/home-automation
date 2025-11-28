@@ -36,18 +36,12 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: nucbox-g3
-      initContainers:
-        # This init container copies files from the ConfigMap volume into the shared config PVC
-        - name: init-config
-          image: homeassistant/home-assistant:2025.2.5
-          command: ["sh", "-c", "cp -v /tmp/configmap/* /config/"]
-          volumeMounts:
-            - name: configmap-file
-              mountPath: /tmp/configmap
-              readOnly: true
-            - name: config
-              mountPath: /config
+      serviceAccountName: ha-config-reloader-sa
+      securityContext:
+        fsGroup: 0 # Ensures the mounted volume is accessible by group 1000
+        runAsUser: 0 # Ensures main HA container runs as user 1000
       containers:
+        # Home Assistant container should be listed first typically, but order doesn't strictly matter for function.
         - name: home-assistant
           image: homeassistant/home-assistant:2025.2.5
           resources:
@@ -58,7 +52,7 @@ spec:
           ports:
             - containerPort: 8123
           volumeMounts:
-            # Mount the main config volume which now contains files copied by the init container
+            # Mount the main config PVC here
             - mountPath: /config
               name: config
           securityContext:
@@ -68,12 +62,31 @@ spec:
                 - NET_ADMIN
                 - NET_RAW
                 - SYS_ADMIN
+
+        # Sidecar container configuration
+        - name: k8s-sidecar-config-reloader
+          image: kiwigrid/k8s-sidecar:latest # Use a specific version tag for production (e.g., 1.20.0)
+          env:
+            # LABEL and LABEL_VALUE must match the label on your ConfigMap object
+            - name: LABEL
+              # This label should exist on your 'home-assistant-configmap' resource
+              value: "home-assistant/config"
+            - name: LABEL_VALUE
+              # This is the value of that label
+              value: "true"
+            # FOLDER is critical: Must match the HA container's /config mount point
+            - name: FOLDER
+              value: "/config"
+            # METHOD: "watch" is correct for continuous operation
+            - name: METHOD
+              value: "watch"
+          volumeMounts:
+            # Mount the SAME PVC volume named 'config' here
+            - name: config
+              mountPath: /config
+              # Note: Sidecar needs write access to copy files into this mountPath
       volumes:
         # The main PVC where Home Assistant runs and where files are copied
         - name: config
           persistentVolumeClaim:
             claimName: home-assistant-pvc
-        # The volume that holds the ConfigMap data, used only by the init container
-        - name: configmap-file
-          configMap:
-            name: home-assistant-configmap

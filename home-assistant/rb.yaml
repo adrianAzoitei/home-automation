@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ha-config-reloader-rb
+  namespace: home-assistant
+subjects:
+  - kind: ServiceAccount
+    name: ha-config-reloader-sa
+    namespace: home-assistant
+roleRef:
+  kind: Role
+  name: ha-config-reloader-role
+  apiGroup: rbac.authorization.k8s.io
