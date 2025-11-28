@@ -38,6 +38,22 @@ data:
       action:
       - service: script.set_leader_temperature
       - service: script.set_leader_target_temperature
+    - alias: Sync SNZB02D temp to TRVZB external input
+      description: Sync SNZB02D temp to TRVZB external input
+      triggers:
+        - entity_id: sensor.sonoff_sensor_1_temperature
+          trigger: state
+      conditions: []
+      actions:
+        - action: mqtt.publish
+          metadata: {}
+          data:
+            evaluate_payload: false
+            qos: "1"
+            retain: false
+            topic: zigbee2mqtt/Room 1 Radiator Valve/set/external_temperature_input
+            payload: "{{ trigger.to_state.state | float }}"
+      mode: single
   scripts.yaml: |-
     set_leader_temperature:
       alias: "Set input_number.temperature based on elected leader room"

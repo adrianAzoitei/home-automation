@@ -36,6 +36,17 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: nucbox-g3
+      initContainers:
+        # This init container copies files from the ConfigMap volume into the shared config PVC
+        - name: init-config
+          image: homeassistant/home-assistant:2025.2.5
+          command: ["sh", "-c", "cp -v /tmp/configmap/* /config/"]
+          volumeMounts:
+            - name: configmap-file
+              mountPath: /tmp/configmap
+              readOnly: true
+            - name: config
+              mountPath: /config
       containers:
         - name: home-assistant
           image: homeassistant/home-assistant:2025.2.5
@@ -47,27 +58,9 @@ spec:
           ports:
             - containerPort: 8123
           volumeMounts:
+            # Mount the main config volume which now contains files copied by the init container
             - mountPath: /config
               name: config
-            - mountPath: /config/configuration.yaml
-              subPath: configuration.yaml
-              name: configmap-file
-            - mountPath: /config/automations.yaml
-              subPath: automations.yaml
-              name: configmap-file
-            - mountPath: /config/sensors.yaml
-              subPath: sensors.yaml
-              name: configmap-file
-            - mountPath: /config/scripts.yaml
-              subPath: scripts.yaml
-              name: configmap-file
-            - mountPath: /media
-              name: media-volume
-            #   readOnly: true
-            - name: data-volume
-              mountPath: /data
-          #- mountPath: /dev/video0
-          #  name: cam
           securityContext:
             privileged: true
             capabilities:
@@ -76,21 +69,11 @@ spec:
                 - NET_RAW
                 - SYS_ADMIN
       volumes:
+        # The main PVC where Home Assistant runs and where files are copied
         - name: config
           persistentVolumeClaim:
             claimName: home-assistant-pvc
-        - name: media-volume
-          hostPath:
-            path: /tmp/media
+        # The volume that holds the ConfigMap data, used only by the init container
         - name: configmap-file
           configMap:
             name: home-assistant-configmap
-        #  hostPath:
-        #    path: /tmp/home-assistant
-        #    type: DirectoryOrCreate
-        - name: data-volume
-          hostPath:
-            path: /tmp/media
-      #- name: cam
-      #  hostPath:
-      #    path: /dev/video0
