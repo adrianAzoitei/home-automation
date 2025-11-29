@@ -38,8 +38,8 @@ spec:
         kubernetes.io/hostname: nucbox-g3
       serviceAccountName: ha-config-reloader-sa
       securityContext:
-        fsGroup: 0 # Ensures the mounted volume is accessible by group 1000
-        runAsUser: 0 # Ensures main HA container runs as user 1000
+        fsGroup: 0 # Ensures the mounted volume is accessible by group 0
+        runAsUser: 0 # Ensures main HA container runs as user 0
       containers:
         # Home Assistant container should be listed first typically, but order doesn't strictly matter for function.
         - name: home-assistant

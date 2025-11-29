@@ -37,6 +37,8 @@ data:
       trigger:
         - platform: state
           entity_id:
+            - climate.room_1_radiator_valve
+            - climate.room_2_radiator_valve
             - climate.room_3_radiator_valve
             # add more climate entities here
       conditions: []
