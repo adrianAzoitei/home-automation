@@ -1,0 +1,21 @@
+namespace: home-assistant
+
+configMapGenerator:
+  - files:
+      - automations.yaml
+      - scripts.yaml
+      - sensors.yaml
+      - configuration.yaml
+    name: home-assistant-configmap
+    options:
+      disableNameSuffixHash: true
+      labels:
+        home-assistant/config: "true"
+
+resources:
+  - pvc.yaml
+  - role.yaml
+  - rb.yaml
+  - sa.yaml
+  - deployment.yaml
+  - ingress.yaml

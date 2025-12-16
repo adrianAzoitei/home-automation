@@ -1,0 +1,23 @@
+default_config:
+frontend:
+  themes: !include_dir_merge_named themes
+automation: !include automations.yaml
+sensor: !include sensors.yaml
+script: !include scripts.yaml
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 0.0.0.0/0
+rest_command:
+  thermostat_set_point:
+    url: "http://192.168.178.53/room_setpoint"
+    method: "post"
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+    payload: "value={{ set_point }}"
+  thermostat_room_temperature:
+    url: "http://192.168.178.53/room_temperature"
+    method: "post"
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+    payload: "value={{ temperature }}"

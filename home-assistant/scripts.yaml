@@ -1,0 +1,34 @@
+set_leader_temperature:
+  alias: "Set input_number.temperature based on elected leader room"
+  sequence:
+    - variables:
+        hottest_room_temperature: >
+          {% set heating_valves = states | selectattr('entity_id', 'match', '.*_radiator_valve$') | selectattr('attributes.hvac_action', 'eq', 'heating') | list %}
+          {% if heating_valves | length > 0 %}
+            {% set hottest = heating_valves | max(attribute='attributes.temperature') %}
+            {{ hottest.attributes.current_temperature }}
+          {% else %}
+            18
+          {% endif %}
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.temperature
+      data:
+        value: "{{ hottest_room_temperature }}"
+set_leader_target_temperature:
+  alias: "Set input_number.central_heating_setpoint based on elected leader room"
+  sequence:
+    - variables:
+        hottest_room_target_temperature: >
+          {% set heating_valves = states | selectattr('entity_id', 'match', '.*_radiator_valve$') | selectattr('attributes.hvac_action', 'eq', 'heating') | list %}
+          {% if heating_valves | length > 0 %}
+            {% set hottest = heating_valves | max(attribute='attributes.temperature') %}
+            {{ hottest.attributes.temperature }}
+          {% else %}
+            18
+          {% endif %}
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.central_heating_setpoint
+      data:
+        value: "{{ hottest_room_target_temperature }}"

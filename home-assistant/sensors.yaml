@@ -1,0 +1,32 @@
+- platform: rest
+  name: "Central Heating Leader Room Temperature"
+  resource: http://192.168.178.53/metrics
+  value_template: >
+    {% set line = value.split('\n') | select('search', '^room_temperature') | list | first %}
+    {% if line %}
+      {{ line.split(' ')[1] }}
+    {% else %}
+      unknown
+    {% endif %}
+  unit_of_measurement: "°C"
+- platform: rest
+  name: "Central Heating Leader Room Setpoint"
+  resource: http://192.168.178.53/metrics
+  value_template: >
+    {% set line = value.split('\n') | select('search', '^room_setpoint') | list | first %}
+    {% if line %}
+      {{ line.split(' ')[1] }}
+    {% else %}
+      unknown
+    {% endif %}
+  unit_of_measurement: "°C"
+- platform: rest
+  name: "Central Heating Enabled"
+  resource: http://192.168.178.53/metrics
+  value_template: >
+    {% set line = value.split('\n') | select('search', '^ch_enabled') | list | first %}
+    {% if line %}
+      {{ line.split(' ')[1] }}
+    {% else %}
+      unknown
+    {% endif %}

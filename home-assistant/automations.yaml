@@ -1,0 +1,161 @@
+- alias: Set Thermostat via Slider
+  id: "167888000001"
+  description: Calls REST command whenever the input_number changes
+  trigger:
+    - platform: state
+      entity_id: input_number.central_heating_setpoint
+  condition: []
+  action:
+    - service: rest_command.thermostat_set_point
+      data:
+        set_point: "{{ states('input_number.central_heating_setpoint') }}"
+  mode: single
+- alias: Set Temperature via Slider (for debugging)
+  id: "167888000002"
+  description: Calls REST command whenever the input_number changes
+  trigger:
+    - platform: state
+      entity_id: input_number.temperature
+  condition: []
+  action:
+    - service: rest_command.thermostat_room_temperature
+      data:
+        temperature: "{{ states('input_number.temperature') }}"
+  mode: single
+- alias: "Set CH setpoint based on leader room"
+  id: "167888000003"
+  mode: single
+  trigger:
+    - platform: state
+      entity_id:
+        - climate.room_1_radiator_valve
+        - climate.room_2_radiator_valve
+        - climate.room_3_radiator_valve
+        # add more climate entities here
+  conditions: []
+  action:
+    - service: script.set_leader_temperature
+    - service: script.set_leader_target_temperature
+- alias: Sync Room 1 valve with temperature sensor
+  id: "167888000004"
+  description: Sync SNZB02D temp to TRVZB external input
+  triggers:
+    - entity_id: sensor.temperature_sensor_room_1_temperature
+      trigger: state
+  conditions: []
+  actions:
+    - action: mqtt.publish
+      metadata: {}
+      data:
+        evaluate_payload: false
+        qos: "1"
+        retain: false
+        topic: zigbee2mqtt/Room 1 Radiator Valve/set/external_temperature_input
+        payload: "{{ trigger.to_state.state | float }}"
+  mode: single
+- alias: Sync Room 2 valve with temperature sensor
+  id: "167888000005"
+  description: Sync SNZB02D temp to TRVZB external input
+  triggers:
+    - entity_id: sensor.temperature_sensor_room_2_temperature
+      trigger: state
+  conditions: []
+  actions:
+    - action: mqtt.publish
+      metadata: {}
+      data:
+        evaluate_payload: false
+        qos: "1"
+        retain: false
+        topic: zigbee2mqtt/Room 2 Radiator Valve/set/external_temperature_input
+        payload: "{{ trigger.to_state.state | float }}"
+  mode: single
+- alias: Sync Room 3 valve with temperature sensor
+  id: "167888000006"
+  description: Sync SNZB02D temp to TRVZB external input
+  triggers:
+    - entity_id: sensor.temperature_sensor_room_3_temperature
+      trigger: state
+  conditions: []
+  actions:
+    - action: mqtt.publish
+      metadata: {}
+      data:
+        evaluate_payload: false
+        qos: "1"
+        retain: false
+        topic: zigbee2mqtt/Room 3 Radiator Valve/set/external_temperature_input
+        payload: "{{ trigger.to_state.state | float }}"
+  mode: single
+- alias: Stale sensor alarm room 1
+  id: "167888000007"
+  description: "Trigger an alarm when this temperature sensor is stale"
+  trigger:
+    # Trigger every minute on the minute (00:00, 00:01, etc.)
+    - platform: time_pattern
+      minutes: "/10"
+  condition:
+    # Only proceed if the last_updated time is more than 600 seconds ago
+    - condition: template
+      value_template: >-
+        {{ (as_timestamp(now()) - as_timestamp(states.sensor.temperature_sensor_room_1_temperature.last_updated)) > 600.0 }}
+  actions:
+    - service: notify.mobile_app_iphone_mk4r7h4nqq
+      metadata: {}
+      data:
+        title: Stale temperature sensor
+        message: Room 1
+    - service: notify.persistent_notification
+      metadata: {}
+      data:
+        title: Stale temperature sensor
+        message: "Room 1 last updated {{ (as_timestamp(now()) - as_timestamp(states.sensor.temperature_sensor_room_1_temperature.last_updated)) | int }} seconds ago"
+  mode: single
+- alias: Stale sensor alarm room 2
+  id: "167888000008"
+  description: "Trigger an alarm when this temperature sensor is stale"
+  trigger:
+    # Trigger every minute on the minute (00:00, 00:01, etc.)
+    - platform: time_pattern
+      minutes: "/10"
+  condition:
+    # Only proceed if the last_updated time is more than 600 seconds ago
+    - condition: template
+      value_template: >-
+        {{ (as_timestamp(now()) - as_timestamp(states.sensor.temperature_sensor_room_2_temperature.last_updated)) > 600.0 }}
+  actions:
+    - service: notify.mobile_app_iphone_mk4r7h4nqq
+      metadata: {}
+      data:
+        title: Stale temperature sensor
+        message: Room 2
+    - service: notify.persistent_notification
+      metadata: {}
+      data:
+        title: Stale temperature sensor
+        message: "Room 2 last updated {{ (as_timestamp(now()) - as_timestamp(states.sensor.temperature_sensor_room_2_temperature.last_updated)) | int }} seconds ago"
+  mode: single
+- alias: Stale sensor alarm room 3
+  id: "167888000009"
+  description: "Trigger an alarm when this temperature sensor is stale"
+  trigger:
+    # Trigger every minute on the minute (00:00, 00:01, etc.)
+    - platform: time_pattern
+      minutes: "/10"
+  condition:
+    # Only proceed if the last_updated time is more than 600 seconds ago
+    - condition: template
+      value_template: >-
+        {{ (as_timestamp(now()) - as_timestamp(states.sensor.temperature_sensor_room_3_temperature.last_updated)) > 600.0 }}
+  actions:
+    - service: notify.mobile_app_iphone_mk4r7h4nqq
+      metadata: {}
+      data:
+        title: Stale temperature sensor
+        message: Room 3
+    - service: notify.persistent_notification
+      metadata: {}
+      data:
+        title: Stale temperature sensor
+        message: "Room 3 last updated {{ (as_timestamp(now()) - as_timestamp(states.sensor.temperature_sensor_room_3_temperature.last_updated)) | int }} seconds ago"
+  mode: single
